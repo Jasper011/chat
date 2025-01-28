@@ -2,17 +2,16 @@ const ws = new WebSocket(`wss://chatserver-i35t.onrender.com:10000`);
 let currentRoomId = null;
 const clientId = localStorage.getItem("clientId") || generateClientId();
 localStorage.setItem("clientId", clientId);
-
+let roomUpdateInterval;
 ws.onopen = () => {
     ws.send(JSON.stringify({ type: "setClientId", clientId }));
     ws.send(JSON.stringify({ type: "getRooms" }));
+    roomUpdateInterval = setInterval(() => {
+        if (!currentRoomId) {
+            ws.send(JSON.stringify({ type: "getRooms" }));
+        }
+    }, 10000);
 };
-
-const roomUpdateInterval = setInterval(() => {
-    if (!currentRoomId) {
-        ws.send(JSON.stringify({ type: "getRooms" }));
-    }
-}, 3000);
 
 document.getElementById("create-room").addEventListener("click", () => {
     const roomId = document.getElementById("room-id").value.trim();
