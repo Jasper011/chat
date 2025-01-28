@@ -1,4 +1,4 @@
-const ws = new WebSocket(`wss://://chatserver-i35t.onrender.com:3000`);
+const ws = new WebSocket(`wss://://chatserver-i35t.onrender.com:10000`);
 let currentRoomId = null;
 const clientId = localStorage.getItem("clientId") || generateClientId();
 localStorage.setItem("clientId", clientId);
