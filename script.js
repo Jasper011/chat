@@ -1,4 +1,4 @@
-const ws = new WebSocket(`wss://chatserver-i35t.onrender.com`);
+const ws = new WebSocket(`wss://spotty-mango-ferry.glitch.me`);
 let currentRoomId = null;
 const clientId = localStorage.getItem("clientId") || generateClientId();
 localStorage.setItem("clientId", clientId);
