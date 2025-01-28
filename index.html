@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Chat Rooms</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="container">
+    <h1>Chat Rooms</h1>
+    <div id="controls">
+      <input id="room-id" type="text" placeholder="Enter room ID">
+      <button id="create-room">Create Room</button>
+    </div>
+    <div id="room-list">
+      <h3>Available Rooms</h3>
+      <ul id="rooms"></ul>
+    </div>
+    <div id="chat">
+      <div id="messages"></div>
+      <input id="message-input" type="text" placeholder="Enter your message">
+      <button id="send-message">Send</button>
+      <button id="leave-room">Leave Room</button>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
