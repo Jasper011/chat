@@ -3,13 +3,13 @@ let currentRoomId = null;
 
 let roomUpdateInterval;
 
-ws.onopen((ws) => {
+ws.onopen = () => {
     roomUpdateInterval = setInterval(() => {
         if (!currentRoomId) {
             ws.send(JSON.stringify({ type: "getRooms" }));
         }
     }, 3000);
-})
+}
 
 document.getElementById("create-room").addEventListener("click", () => {
     const roomId = document.getElementById("room-id").value.trim();
