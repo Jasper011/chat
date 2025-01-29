@@ -16,6 +16,7 @@ document.getElementById("create-room").addEventListener("click", () => {
     if (roomId) {
         ws.send(JSON.stringify({ type: "createRoom", roomId }));
     }
+    ws.send(JSON.stringify({ type: "getRooms" }));
 });
 
 document.getElementById("leave-room").addEventListener("click", () => {
@@ -38,6 +39,7 @@ ws.onmessage = (event) => {
             currentRoomId = data.roomId;
             console.log(`Room "${currentRoomId}" created!`);
             document.getElementById("chat").style.display = "block";
+            ws.send(JSON.stringify({ type: "getRooms" }));
             break;
 
         case "roomJoined":
