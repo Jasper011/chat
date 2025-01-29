@@ -62,7 +62,9 @@ ws.onmessage = (event) => {
             break;
 
         case "message":
-            addMessage(data.message);
+            if (data.roomId === currentRoomId) {
+                addMessage(data.message);
+            }
             break;
 
         default:
