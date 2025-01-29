@@ -60,6 +60,9 @@ ws.onmessage = (event) => {
             break;
 
         case "roomList":
+            console.log(data);
+            console.log(data.rooms);
+            
             displayRooms(data.rooms);
             break;
 
@@ -111,7 +114,7 @@ function displayRooms(rooms) {
             ws.send(JSON.stringify({ type: "getRooms" }));
         });
 
-        li.appendChild(deleteButton);
-        roomList.appendChild(li);
+        li.append(deleteButton);
+        roomList.append(li);
     });
 }
