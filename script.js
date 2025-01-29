@@ -35,19 +35,22 @@ document.getElementById("send-message").addEventListener("click", () => {
 ws.onmessage = (event) => {
     const data = JSON.parse(event.data);
     switch (data.type) {
+        case "message":
+            if (data.roomId === currentRoomId) {
+                addMessage(data.message);
+            }
+            break;
+
         case "roomCreated":
             currentRoomId = data.roomId;
-            console.log(`Room "${currentRoomId}" created!`);
             document.getElementById("chat").style.display = "block";
-            ws.send(JSON.stringify({ type: "getRooms" }));
             break;
 
         case "roomJoined":
             currentRoomId = data.roomId;
-            console.log(`Joined room "${currentRoomId}"!`);
             document.getElementById("chat").style.display = "block";
-            clearInterval(roomUpdateInterval);
             break;
+
 
         case "roomList":
             displayRooms(data.rooms);
@@ -63,11 +66,6 @@ ws.onmessage = (event) => {
             console.log(`Room "${data.roomId}" has been deleted.`);
             break;
 
-        case "message":
-            if (data.roomId === currentRoomId) {
-                addMessage(data.message);
-            }
-            break;
 
         default:
             console.error("Unknown message type:", data.type);
