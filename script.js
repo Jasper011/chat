@@ -1,23 +1,20 @@
 const ws = new WebSocket(`wss://spotty-mango-ferry.glitch.me`);
 let currentRoomId = null;
-const clientId = localStorage.getItem("clientId") || generateClientId();
-localStorage.setItem("clientId", clientId);
+
 let roomUpdateInterval;
-ws.onopen = () => {
-    ws.send(JSON.stringify({ type: "setClientId", clientId }));
-    ws.send(JSON.stringify({ type: "getRooms" }));
+
+ws.onopen((ws) => {
     roomUpdateInterval = setInterval(() => {
         if (!currentRoomId) {
             ws.send(JSON.stringify({ type: "getRooms" }));
         }
-    }, 10000);
-};
+    }, 3000);
+})
 
 document.getElementById("create-room").addEventListener("click", () => {
     const roomId = document.getElementById("room-id").value.trim();
     if (roomId) {
         ws.send(JSON.stringify({ type: "createRoom", roomId }));
-        ws.send(JSON.stringify({ type: "getRooms" }));
     }
 });
 
@@ -89,25 +86,19 @@ function displayRooms(rooms) {
         li.textContent = `Room ID: ${room.roomId} (${room.participants} participants)`;
         li.style.cursor = "pointer";
         li.addEventListener("click", () => {
-            if (!room.isOwner) {
-                ws.send(JSON.stringify({ type: "joinRoom", roomId: room.roomId }));
-            }
+            ws.send(JSON.stringify({ type: "joinRoom", roomId: room.roomId }));
         });
-        if (room.isOwner) {
-            const deleteButton = document.createElement("button");
-            deleteButton.textContent = "Delete";
-            deleteButton.style.marginLeft = "10px";
-            deleteButton.addEventListener("click", () => {
-                ws.send(JSON.stringify({ type: "deleteRoom", roomId: room.roomId }));
-                document.getElementById("chat").style.display = "none";
-                ws.send(JSON.stringify({ type: "getRooms" }));
-            });
-            li.appendChild(deleteButton);
-        }
+
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.style.marginLeft = "10px";
+        deleteButton.addEventListener("click", () => {
+            ws.send(JSON.stringify({ type: "deleteRoom", roomId: room.roomId }));
+            document.getElementById("chat").style.display = "none";
+            ws.send(JSON.stringify({ type: "getRooms" }));
+        });
+
+        li.appendChild(deleteButton);
         roomList.appendChild(li);
     });
-}
-
-function generateClientId() {
-    return `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 }
