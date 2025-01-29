@@ -1,33 +1,31 @@
 const ws = new WebSocket(`wss://spotty-mango-ferry.glitch.me`);
 let currentRoomId = null;
-
 let roomUpdateInterval;
 
-ws.onopen = () => {
+ws.onopen = function () {
     roomUpdateInterval = setInterval(() => {
         if (!currentRoomId) {
             ws.send(JSON.stringify({ type: "getRooms" }));
         }
     }, 3000);
-}
+};
 
 document.getElementById("create-room").addEventListener("click", () => {
     const roomId = document.getElementById("room-id").value.trim();
     if (roomId) {
         ws.send(JSON.stringify({ type: "createRoom", roomId }));
     }
-    ws.send(JSON.stringify({ type: "getRooms" }));
 });
 
 document.getElementById("leave-room").addEventListener("click", () => {
     ws.send(JSON.stringify({ type: "leaveRoom" }));
+    clearMessages();
 });
 
 document.getElementById("send-message").addEventListener("click", () => {
     const message = document.getElementById("message-input").value.trim();
     if (message && currentRoomId) {
         ws.send(JSON.stringify({ type: "sendMessage", roomId: currentRoomId, message }));
-        addMessage(`You: ${message}`);
         document.getElementById("message-input").value = "";
     }
 });
@@ -43,14 +41,23 @@ ws.onmessage = (event) => {
 
         case "roomCreated":
             currentRoomId = data.roomId;
+            clearMessages();
             document.getElementById("chat").style.display = "block";
+
+            if (data.messages) {
+                data.messages.forEach(msg => addMessage(msg.message));
+            }
             break;
 
         case "roomJoined":
             currentRoomId = data.roomId;
+            clearMessages();
             document.getElementById("chat").style.display = "block";
-            break;
 
+            if (data.messages) {
+                data.messages.forEach(msg => addMessage(msg.message));
+            }
+            break;
 
         case "roomList":
             displayRooms(data.rooms);
@@ -59,16 +66,16 @@ ws.onmessage = (event) => {
         case "leftRoom":
             currentRoomId = null;
             document.getElementById("chat").style.display = "none";
-            console.log("You have left the room.");
             break;
 
         case "roomDeleted":
             console.log(`Room "${data.roomId}" has been deleted.`);
+            if (currentRoomId === data.roomId) {
+                currentRoomId = null;
+                document.getElementById("chat").style.display = "none";
+                clearMessages();
+            }
             break;
-
-
-        default:
-            console.error("Unknown message type:", data.type);
     }
 };
 
@@ -78,6 +85,10 @@ function addMessage(message) {
     div.textContent = message;
     messages.appendChild(div);
     messages.scrollTop = messages.scrollHeight;
+}
+
+function clearMessages() {
+    document.getElementById("messages").innerHTML = "";
 }
 
 function displayRooms(rooms) {
