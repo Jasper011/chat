@@ -1,10 +1,16 @@
+import myIp from "./nodeJS/myIP.json" with { type: 'json' };
+
+console.log(myIp);
+console.log(myIp.data.ip);
+
+
 console.log('client is runnig');
 
 let serverLink = 'wss://spotty-mango-ferry.glitch.me'
-let serverData 
+let serverData; 
 
 try {
-   const serverResp = await fetch('http://192.168.56.1:4000/', {
+   const serverResp = await fetch('http://'+myIp.data.ip+':4000/', {
     method: "GET",
     mode: "cors"
   });
@@ -15,7 +21,7 @@ try {
 
 
 if(serverData == 1) {
-    serverLink = 'ws://192.168.56.1:4000'
+    serverLink = 'ws://'+myIp.data.ip+':4000'
 }
 
 console.log('final sever link is ' + serverLink);
@@ -59,9 +65,6 @@ ws.onmessage = (event) => {
             break;
 
         case "roomList":
-            console.log(data);
-            console.log(data.rooms);
-            
             displayRooms(data.rooms);
             break;
 
@@ -71,7 +74,6 @@ ws.onmessage = (event) => {
             break;
 
         case "roomDeleted":
-            console.log(`Room "${data.roomId}" has been deleted.`);
             if (currentRoomId === data.roomId) {
                 currentRoomId = null;
                 document.getElementById("chat").style.display = "none";
@@ -125,7 +127,7 @@ function init() {
         if (roomId) {
             ws.send(JSON.stringify({ type: "createRoom", roomId }));
         } else {
-            console.log()("Please enter a room ID");
+            console.log("Please enter a room ID");
         }
     });
     
@@ -137,7 +139,7 @@ function init() {
             ws.send(JSON.stringify({ type: "sendMessage", roomId: currentRoomId, message: message }));
             messageInput.value = "";
         } else {
-            console.log()("Cannot send an empty message or you are not in a room");
+            console.log("Cannot send an empty message or you are not in a room");
         }
     });
     
