@@ -1,37 +1,36 @@
-const ws = new WebSocket(`wss://spotty-mango-ferry.glitch.me`);
+console.log('client is runnig');
+
+let serverLink = 'wss://spotty-mango-ferry.glitch.me'
+let serverData 
+
+try {
+   const serverResp = await fetch('http://192.168.56.1:4000/', {
+    method: "GET",
+    mode: "cors"
+  });
+    serverData = await serverResp.text();
+} catch(e) {
+    console.warn(e);
+}
+
+
+if(serverData == 1) {
+    serverLink = 'ws://192.168.56.1:4000'
+}
+
+console.log('final sever link is ' + serverLink);
+
+const ws = new WebSocket(serverLink);
 let currentRoomId = null;
-let roomUpdateInterval;
 
 ws.onopen = function () {
-    roomUpdateInterval = setInterval(() => {
-        if (!currentRoomId) {
-            ws.send(JSON.stringify({ type: "getRooms" }));
-        }
-    }, 3000);
+    ws.send(JSON.stringify({ type: "getRooms" }));
+    init()
 };
-
-document.getElementById("create-room").addEventListener("click", () => {
-    const roomId = document.getElementById("room-id").value.trim();
-    if (roomId) {
-        ws.send(JSON.stringify({ type: "createRoom", roomId }));
-    }
-});
-
-document.getElementById("leave-room").addEventListener("click", () => {
-    ws.send(JSON.stringify({ type: "leaveRoom" }));
-    clearMessages();
-});
-
-document.getElementById("send-message").addEventListener("click", () => {
-    const message = document.getElementById("message-input").value.trim();
-    if (message && currentRoomId) {
-        ws.send(JSON.stringify({ type: "sendMessage", roomId: currentRoomId, message }));
-        document.getElementById("message-input").value = "";
-    }
-});
 
 ws.onmessage = (event) => {
     const data = JSON.parse(event.data);
+    console.log(data);
     switch (data.type) {
         case "message":
             if (data.roomId === currentRoomId) {
@@ -99,7 +98,7 @@ function displayRooms(rooms) {
     roomList.innerHTML = "";
     rooms.forEach((room) => {
         const li = document.createElement("li");
-        li.textContent = `Room ID: ${room.roomId} (${room.participants} participants)`;
+        li.textContent = `Room ID: ${room.roomId}`;
         li.style.cursor = "pointer";
         li.addEventListener("click", () => {
             ws.send(JSON.stringify({ type: "joinRoom", roomId: room.roomId }));
@@ -117,4 +116,41 @@ function displayRooms(rooms) {
         li.append(deleteButton);
         roomList.append(li);
     });
+}
+
+function init() {
+    document.getElementById("create-room").addEventListener("click", () => {
+        ws.send(JSON.stringify({ type: "getRooms" }));
+        const roomId = document.getElementById("room-id").value.trim();
+        if (roomId) {
+            ws.send(JSON.stringify({ type: "createRoom", roomId }));
+        } else {
+            console.log()("Please enter a room ID");
+        }
+    });
+    
+    document.getElementById("send-message").addEventListener("click", () => {
+        ws.send(JSON.stringify({ type: "getRooms" }));
+        const messageInput = document.getElementById("message-input");
+        const message = messageInput.value.trim();
+        if (message && currentRoomId) {
+            ws.send(JSON.stringify({ type: "sendMessage", roomId: currentRoomId, message: message }));
+            messageInput.value = "";
+        } else {
+            console.log()("Cannot send an empty message or you are not in a room");
+        }
+    });
+    
+    document.getElementById("leave-room").addEventListener("click", () => {
+        ws.send(JSON.stringify({ type: "getRooms" }));
+        if (currentRoomId) {
+            ws.send(JSON.stringify({ type: "leaveRoom", roomId: currentRoomId }));
+            currentRoomId = null;
+            document.getElementById("chat").style.display = "none";
+            clearMessages();
+        } else {
+            console.log("You are not in a room");
+        }
+    });
+    
 }
