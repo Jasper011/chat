@@ -27,9 +27,19 @@ h1 {
     margin-bottom: 20px;
 }
 
+#controls .buttons {
+    display: flex;
+    align-content: stretch;
+    align-content: flex-end;
+    flex-direction: column-reverse;
+    flex-wrap: wrap;
+    width: 40%;
+}
+
 #controls input,
 #controls button {
     padding: 10px;
+    margin-bottom: 10px;
     font-size: 16px;
     border-radius: 8px;
     border: 1px solid #ddd;
@@ -38,6 +48,7 @@ h1 {
 
 #controls button {
     background: #4caf50;
+    width: 60%;
     color: white;
     border: none;
     cursor: pointer;

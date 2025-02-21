@@ -10,7 +10,7 @@ let serverLink = 'wss://spotty-mango-ferry.glitch.me'
 let serverData; 
 
 try {
-   const serverResp = await fetch('http://'+myIp.data.ip+':4000/', {
+   const serverResp = await fetch('http://'+myIp.data.ip+':4000/check', {
     method: "GET",
     mode: "cors"
   });
@@ -21,6 +21,8 @@ try {
 
 
 if(serverData == 1) {
+    console.log('You has local server ONLINE!');
+    
     serverLink = 'ws://'+myIp.data.ip+':4000'
 }
 
@@ -30,27 +32,30 @@ const ws = new WebSocket(serverLink);
 let currentRoomId = null;
 
 ws.onopen = function () {
-    ws.send(JSON.stringify({ type: "getRooms" }));
+    ws.send(JSON.stringify({ type: "getRooms", data:{} }));
     init()
 };
 
 ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    console.log(data);
-    switch (data.type) {
+    const type = JSON.parse(event.data).type;
+    const data = JSON.parse(event.data).data;
+    console.log(type, data);
+    
+    switch (type) {
         case "message":
             if (data.roomId === currentRoomId) {
-                addMessage(data.message);
+                console.log('message get');
+                addMessage(data.message, data.sender);
             }
             break;
-
         case "roomCreated":
+            console.log(data.roomLink);
+            
             currentRoomId = data.roomId;
             clearMessages();
             document.getElementById("chat").style.display = "block";
-
             if (data.messages) {
-                data.messages.forEach(msg => addMessage(msg.message));
+                data.messages.forEach(msg => addMessage(msg.message, msg.sender));
             }
             break;
 
@@ -60,7 +65,7 @@ ws.onmessage = (event) => {
             document.getElementById("chat").style.display = "block";
 
             if (data.messages) {
-                data.messages.forEach(msg => addMessage(msg.message));
+                data.messages.forEach(msg => addMessage(msg.message, msg.sender));
             }
             break;
 
@@ -83,11 +88,11 @@ ws.onmessage = (event) => {
     }
 };
 
-function addMessage(message) {
+function addMessage(message, sender) {
     const messages = document.getElementById("messages");
     const div = document.createElement("div");
-    div.textContent = message;
-    messages.appendChild(div);
+    div.textContent = sender + ': ' + message;
+    messages.append(div);
     messages.scrollTop = messages.scrollHeight;
 }
 
@@ -95,24 +100,24 @@ function clearMessages() {
     document.getElementById("messages").innerHTML = "";
 }
 
-function displayRooms(rooms) {
+function displayRooms(roomsId) {
     const roomList = document.getElementById("rooms");
     roomList.innerHTML = "";
-    rooms.forEach((room) => {
+    roomsId.forEach((roomId) => {
         const li = document.createElement("li");
-        li.textContent = `Room ID: ${room.roomId}`;
+        li.textContent = `Room ID: ${roomId}`;
         li.style.cursor = "pointer";
         li.addEventListener("click", () => {
-            ws.send(JSON.stringify({ type: "joinRoom", roomId: room.roomId }));
+            ws.send(JSON.stringify({ type: "joinRoom", data:{roomId} }));
         });
 
         const deleteButton = document.createElement("button");
         deleteButton.textContent = "Delete";
         deleteButton.style.marginLeft = "10px";
         deleteButton.addEventListener("click", () => {
-            ws.send(JSON.stringify({ type: "deleteRoom", roomId: room.roomId }));
+            ws.send(JSON.stringify({ type: "deleteRoom", data:{ roomId }}));
             document.getElementById("chat").style.display = "none";
-            ws.send(JSON.stringify({ type: "getRooms" }));
+            ws.send(JSON.stringify({ type: "getRooms", data: {} }));
         });
 
         li.append(deleteButton);
@@ -121,22 +126,34 @@ function displayRooms(rooms) {
 }
 
 function init() {
+    const nickname = localStorage.getItem('nickname')
+    ws.nickname = nickname
+    document.getElementById("nickname").value = nickname
+
     document.getElementById("create-room").addEventListener("click", () => {
-        ws.send(JSON.stringify({ type: "getRooms" }));
+        if (!ws.nickname){
+            alert("You need to write your nickname");
+            return
+        }
+        ws.send(JSON.stringify({ type: "getRooms", data:{} }));
         const roomId = document.getElementById("room-id").value.trim();
+        const originLink = window.location.origin + '/game/'
         if (roomId) {
-            ws.send(JSON.stringify({ type: "createRoom", roomId }));
+            ws.send(JSON.stringify({ type: "createRoom", data: {roomId, originLink} }));
         } else {
             console.log("Please enter a room ID");
         }
     });
     
     document.getElementById("send-message").addEventListener("click", () => {
-        ws.send(JSON.stringify({ type: "getRooms" }));
+        if (!ws.nickname){
+            alert("You need to write your nickname");
+            return
+        }
         const messageInput = document.getElementById("message-input");
         const message = messageInput.value.trim();
         if (message && currentRoomId) {
-            ws.send(JSON.stringify({ type: "sendMessage", roomId: currentRoomId, message: message }));
+            ws.send(JSON.stringify({ type: "sendMessage", data: {roomId: currentRoomId, message: message, sender: ws.nickname} }));
             messageInput.value = "";
         } else {
             console.log("Cannot send an empty message or you are not in a room");
@@ -144,9 +161,9 @@ function init() {
     });
     
     document.getElementById("leave-room").addEventListener("click", () => {
-        ws.send(JSON.stringify({ type: "getRooms" }));
+        ws.send(JSON.stringify({ type: "getRooms", data:{} }));
         if (currentRoomId) {
-            ws.send(JSON.stringify({ type: "leaveRoom", roomId: currentRoomId }));
+            ws.send(JSON.stringify({ type: "leaveRoom", data: {roomId: currentRoomId} }));
             currentRoomId = null;
             document.getElementById("chat").style.display = "none";
             clearMessages();
@@ -154,5 +171,15 @@ function init() {
             console.log("You are not in a room");
         }
     });
+
+    document.getElementById("change-name").addEventListener("click", ()=>{
+        const nickname = document.getElementById("nickname").value.trim()
+        if (nickname) {
+            ws.nickname = nickname
+            localStorage.setItem('nickname', nickname)
+        } else {
+            alert("You need to write your nickname");
+        }
+    })
     
 }

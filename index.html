@@ -4,14 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WebSocket Chat Rooms</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
   <div id="container">
     <h1>Chat Rooms</h1>
     <div id="controls">
-      <input id="room-id" type="text" placeholder="Enter room ID">
-      <button id="create-room">Create Room</button>
+      <div class="inputs">
+        <input id="nickname" type="text" placeholder="Enter your nickname">
+        <input id="room-id" type="text" placeholder="Enter room ID" value="3e9934b1-d596-494c-a6d4-8fab9c61f9e0">
+      </div>
+      <div class="buttons">
+        <button id="create-room">Create Room</button>
+        <button id="change-name">Change name</button>
+      </div>
     </div>
     <div id="room-list">
       <h3>Available Rooms</h3>
